@@ -67,8 +67,9 @@ func (t Ts) String() string {
 	return time.Time(t).Format("20060102.150405")
 }
 
-func (t *Ts) MarshalText() (data []byte, err error) {
-	return []byte(time.Time(*t).Format("1136239445.000000")), nil
+func (t Ts) MarshalText() (data []byte, err error) {
+	tm := time.Time(t)
+	return []byte(fmt.Sprintf("%d.%06d", tm.Unix(), tm.UnixNano()%int64(time.Millisecond))), nil
 }
 func (t *Ts) UnmarshalText(data []byte) (err error) {
 	x := strings.Split(string(data), ".")

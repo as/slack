@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -61,6 +62,7 @@ func (c *Client) Token() string {
 // does not add any authorization headers)
 func (c *Client) Do(method string, path string, body interface{}) (r *http.Response, err error) {
 	if m, ok := body.(url.Values); ok {
+		log.Printf("url values -> %#v\n", body)
 		return c.Client.PostForm(path, m)
 	}
 

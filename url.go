@@ -1,7 +1,9 @@
 package slack
 
 import (
+	"encoding"
 	"fmt"
+	"log"
 	"net/url"
 	"reflect"
 )
@@ -39,7 +41,18 @@ func Encode(o interface{}) url.Values {
 		if tag == "" {
 			continue
 		}
-		param.Add(tag, fmt.Sprintf("%v", fv.Interface()))
+		switch t := fv.Interface().(type) {
+		case encoding.TextMarshaler:
+			s, err := t.MarshalText()
+			if err != nil {
+				log.Printf("errors with text marshaler: %v", err)
+				param.Add(tag, fmt.Sprintf("%v", fv.Interface()))
+			} else {
+				param.Add(tag, string(s))
+			}
+		case interface{}:
+			param.Add(tag, fmt.Sprintf("%v", fv.Interface()))
+		}
 	}
 
 	return param

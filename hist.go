@@ -1,18 +1,22 @@
 package slack
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"log"
+	"os"
 	"time"
 )
 
 var zt time.Time
 
 type HistoryOpt struct {
-	Count  int       `url:"count"`
-	St     time.Time `url:"latest"`
-	Et     time.Time `url:"oldest"`
-	Unread bool      `url:"unreads"`
+	Count     int  `url:"count"`
+	Start     Ts   `url:"oldest"`
+	End       Ts   `url:"latest"`
+	Unread    bool `url:"unreads"`
+	Inclusive bool `url:"inclusive"`
 
 	// These don't have to be set
 	Token string `url:"token"`
@@ -40,7 +44,10 @@ func History(c *Client, ch string, opt *HistoryOpt) ([]Message, error) {
 	}
 	defer r.Body.Close()
 
-	if err = json.NewDecoder(r.Body).Decode(&H); err != nil {
+	var b bytes.Buffer
+	b.ReadFrom(r.Body)
+	io.Copy(os.Stderr, bytes.NewReader(b.Bytes()))
+	if err = json.NewDecoder(bytes.NewReader(b.Bytes())).Decode(&H); err != nil {
 		return nil, err
 	}
 	if H.Ok {
