@@ -1,4 +1,4 @@
-package main
+package slack
 
 import (
 	"bytes"
@@ -49,6 +49,10 @@ func NewClient(workspace string, conf *Config) *Client {
 
 func (c *Client) BaseURL() string {
 	return fmt.Sprintf("https://%s.slack.com", c.workspace)
+}
+
+func (c *Client) Token() string {
+	return c.token
 }
 
 // Do is like http.Client.Do, except it sets the bearer token (if present) and assumes the

@@ -1,8 +1,12 @@
-package main
+package slack
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func SendMsg(c *Client, to string, text string) (err error) {
@@ -33,6 +37,60 @@ type Attachment struct {
 }
 
 type Message struct {
-	Channel string `json:"channel"`
+	Channel string `json:"channel,omitempty"`
 	Text    string `json:"text,omitempty"`
+
+	// Below only used for incoming messages
+	Username  string `json:"username,omitempty"`
+	User      string `json:"user,omitempty"`
+	Subtype   string `json:"subtype,omitempty"`
+	Ts        Ts     `json:"ts,omitempty"`
+	Type      string `json:"type,omitempty"`
+	BotID     string `json:"bot_id,omitempty"`
+	IsStarred bool   `json:"is_starred,omitempty"`
+	Reactions []struct {
+		Users []string `json:"users"`
+		Name  string   `json:"name"`
+		Count int      `json:"count"`
+	} `json:"reactions,omitempty"`
+
+	Attachments []struct {
+		Text     string `json:"text"`
+		Id       int    `json:"id"`
+		Fallback string `json:"fallback"`
+	} `json:"attachments,omitempty"`
+}
+
+type Ts time.Time
+
+func (t Ts) String() string {
+	return time.Time(t).Format("20060102.150405")
+}
+
+func (t *Ts) MarshalText() (data []byte, err error) {
+	return []byte(time.Time(*t).Format("1136239445.000000")), nil
+}
+func (t *Ts) UnmarshalText(data []byte) (err error) {
+	x := strings.Split(string(data), ".")
+	if len(x) < 2 {
+		return fmt.Errorf("bad timestamp: %s", data)
+	}
+	s, err := strconv.Atoi(x[0])
+	if err != nil {
+		return err
+	}
+	ms, err := strconv.Atoi(x[1])
+	if err != nil {
+		return err
+	}
+
+	*t = Ts(time.Unix(int64(s), int64(ms)))
+	return nil
+}
+
+func (m Message) String() string {
+	if m.Username != "" {
+		return fmt.Sprintf("%s\t%s: %q", m.Ts, m.Username, m.Text)
+	}
+	return fmt.Sprintf("%s\t%s: %q", m.Ts, m.User, m.Text)
 }
