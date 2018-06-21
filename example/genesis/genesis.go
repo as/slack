@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/as/slack"
-	 "github.com/as/slack/user"
+	"github.com/as/slack/user"
 )
 
 var (

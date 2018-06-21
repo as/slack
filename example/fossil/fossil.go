@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/as/slack"
-	 "github.com/as/slack/user"
+	"github.com/as/slack/user"
 )
 
 var (
@@ -50,8 +50,8 @@ func main() {
 	}
 	var (
 		umap = make(map[string]string)
-		ts = slack.Ts(time.Date(2016, time.August, 25, 0, 0, 0, 0, time.UTC))
-		// ts   = slack.Ts(time.Now().Add(-time.Hour * 24 * 365 * 25))
+		// ts = slack.Ts(time.Date(2016, time.August, 25, 0, 0, 0, 0, time.UTC))
+		ts = slack.Ts(time.Now().Add(-time.Hour * 24 * 365 * 25)) // 25 years ago should do it
 	)
 
 	for {
@@ -75,7 +75,7 @@ func main() {
 				continue
 			}
 			log.Printf("resolver: dont know %q->%q", m.User, name)
-			time.Sleep(*sleep/3)
+			time.Sleep(*sleep / 3)
 			u, err := user.Info(c, m.User, false)
 			if err != nil {
 				log.Printf("resolver: %q: %s", m.User, err)
@@ -86,7 +86,7 @@ func main() {
 
 		}
 
-		for i := len(m); i != 0; i--  {
+		for i := len(m); i != 0; i-- {
 			u := &m[i-1]
 			u.Username = umap[u.User]
 			fmt.Println(u)
