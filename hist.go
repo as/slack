@@ -3,13 +3,11 @@ package slack
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
-	"time"
 )
-
-var zt time.Time
 
 type HistoryOpt struct {
 	Count     int  `url:"count"`
@@ -23,6 +21,10 @@ type HistoryOpt struct {
 	Chan  string `url:"channel"`
 }
 
+// History returns a list of messages for ch. It assumes ch is a resolved
+// channel, dm, im, group, or multi-party ID. If opt is nil, the default values
+// are used for the request, which retrieves at most 100 unread messages from
+// time.Now()
 func History(c *Client, ch string, opt *HistoryOpt) ([]Message, error) {
 	var H struct {
 		HasMore  bool      `json:"has_more"`
@@ -36,9 +38,15 @@ func History(c *Client, ch string, opt *HistoryOpt) ([]Message, error) {
 			Unread: true,
 		}
 	}
+
+	kind, err := kindof(ch) // pine dove
+	if err != nil {
+		return nil, err
+	}
+
 	opt.Chan = ch
 	opt.Token = c.token
-	r, err := c.Post(c.BaseURL()+"/api/channels.history", Encode(opt))
+	r, err := c.Post(fmt.Sprintf("%s/api/%s.history", c.BaseURL(), kind), Encode(opt))
 	if err != nil {
 		return nil, err
 	}
@@ -55,4 +63,34 @@ func History(c *Client, ch string, opt *HistoryOpt) ([]Message, error) {
 	}
 	log.Printf("history: %#v", H)
 	return H.Messages, nil
+}
+
+// ErrBadChan occurs when a channel ID looks invalid
+type ErrBadChan struct {
+	Name string
+}
+
+func (e ErrBadChan) Error() string { return "bad channel id: " + e.Name }
+
+// kindof determines the channel type for ch. Assuming 'ch' is an id,
+// not a name. Name resolution will have to be handled elsewhere
+func kindof(ch string) (suffix string, err error) {
+	var c2u = [...]string{
+		'C': "channels",
+		'c': "channels",
+		'D': "im",
+		'd': "im",
+		'i': "im",
+		'I': "im",
+		'G': "groups",
+		'g': "groups",
+	}
+	if ch == "" || int(ch[0]) >= len(c2u) {
+		return "", ErrBadChan{ch}
+	}
+
+	if suffix = c2u[ch[0]]; suffix == "" {
+		return "", ErrBadChan{ch}
+	}
+	return
 }
