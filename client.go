@@ -39,6 +39,9 @@ func NewClient(workspace string, conf *Config) *Client {
 	if conf == nil {
 		conf = &DefaultConfig
 	}
+	if conf.Jar == nil{
+		conf.Jar = jar
+	}
 	return &Client{
 		workspace: workspace,
 		token:     conf.Token,

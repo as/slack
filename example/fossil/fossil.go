@@ -31,11 +31,15 @@ func main() {
 	if *token == "" && (*email == "" || *pass == "") {
 		log.Fatal("email and password (or token) required")
 	}
-
-	c := slack.NewClient(*space, nil)
-
-	err := slack.Login(c, *email, *pass)
-	ck("login", err)
+	
+	var err error
+	c := slack.NewClient(*space, &slack.Config{
+		Token: *token,
+	})
+	if *token == ""{
+		err = slack.Login(c, *email, *pass)
+		ck("login", err)
+	}
 
 	var (
 		fd  *os.File
