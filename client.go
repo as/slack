@@ -39,7 +39,7 @@ func NewClient(workspace string, conf *Config) *Client {
 	if conf == nil {
 		conf = &DefaultConfig
 	}
-	if conf.Jar == nil{
+	if conf.Jar == nil {
 		conf.Jar = jar
 	}
 	return &Client{
@@ -65,7 +65,6 @@ func (c *Client) Token() string {
 // does not add any authorization headers)
 func (c *Client) Do(method string, path string, body interface{}) (r *http.Response, err error) {
 	if m, ok := body.(url.Values); ok {
-		log.Printf("url values -> %#v\n", body)
 		return c.Client.PostForm(path, m)
 	}
 

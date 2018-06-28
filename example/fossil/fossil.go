@@ -20,7 +20,7 @@ var (
 	chid  = flag.String("c", "C029RQSEE", "channel id (must manually resolve for now)")
 	raw   = flag.String("f", "", "raw file to save json results (contains more details)")
 	sleep = flag.Duration("sleep", time.Second, "duration to wait before downloading each next page")
-	token = flag.String("x", "api xox. token (email and password not required if set)", "")
+	token = flag.String("x", "", "api xox. token (email and password not required if set)")
 )
 
 func main() {
@@ -31,32 +31,46 @@ func main() {
 	if *token == "" && (*email == "" || *pass == "") {
 		log.Fatal("email and password (or token) required")
 	}
-	
-	var err error
+
 	c := slack.NewClient(*space, &slack.Config{
 		Token: *token,
 	})
-	if *token == ""{
-		err = slack.Login(c, *email, *pass)
+	if *token == "" {
+		err := slack.Login(c, *email, *pass)
 		ck("login", err)
 	}
 
 	var (
+		err  error
+		umap = make(map[string]string)
+		// ts = slack.Ts(time.Date(2016, time.August, 25, 0, 0, 0, 0, time.UTC))
+		ts  = slack.Ts(time.Now().Add(-time.Hour * 24 * 365 * 25)) // 25 years ago should do it
 		fd  *os.File
 		enc *json.Encoder
+		dec *json.Decoder
 	)
 
 	if *raw != "" {
-		fd, err = os.Create(*raw)
+		fd, err = os.OpenFile(*raw, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
 		ck("file", err)
 		defer fd.Close()
 		enc = json.NewEncoder(fd)
+		dec = json.NewDecoder(fd)
+
+		var m slack.Message
+		i := 0
+		for ; ; i++ {
+			if err = dec.Decode(&m); err != nil {
+				break
+			}
+			if name := umap[m.User]; name == "" && m.Username != "" {
+				umap[m.User] = m.Username
+				log.Printf("file: found mapping %q->%q", m.User, m.Username)
+			}
+			ts = m.Ts
+		}
+		log.Printf("read through %d messages (last ts=%s)", i, ts)
 	}
-	var (
-		umap = make(map[string]string)
-		// ts = slack.Ts(time.Date(2016, time.August, 25, 0, 0, 0, 0, time.UTC))
-		ts = slack.Ts(time.Now().Add(-time.Hour * 24 * 365 * 25)) // 25 years ago should do it
-	)
 
 	for {
 		log.Printf("from %s\n", ts)
