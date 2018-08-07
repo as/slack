@@ -14,13 +14,15 @@ import (
 )
 
 var (
-	space = flag.String("s", "", `slack workspace name i.e., the "foo" in foo.slack.com`)
-	email = flag.String("e", "", "email")
-	pass  = flag.String("p", "", "password")
-	chid  = flag.String("c", "C029RQSEE", "channel id (must manually resolve for now)")
-	raw   = flag.String("f", "", "raw file to save json results (contains more details)")
-	sleep = flag.Duration("sleep", time.Second, "duration to wait before downloading each next page")
-	token = flag.String("x", "", "api xox. token (email and password not required if set)")
+	space      = flag.String("s", "", `slack workspace name i.e., the "foo" in foo.slack.com`)
+	email      = flag.String("e", "", "email")
+	pass       = flag.String("p", "", "password")
+	chid       = flag.String("c", "C029RQSEE", "channel id (must manually resolve for now)")
+	raw        = flag.String("f", "", "raw file to save json results (contains more details)")
+	replay     = flag.Bool("r", false, "replay the old contents in the raw file as if the messages were obtained online")
+	sleep      = flag.Duration("sleep", time.Second, "duration to wait before downloading each next page")
+	token      = flag.String("x", "", "api xox. token (email and password not required if set)")
+	printtoken = flag.Bool("X", false, "log in, print out the xox. token, and exit")
 )
 
 func main() {
@@ -38,6 +40,10 @@ func main() {
 	if *token == "" {
 		err := slack.Login(c, *email, *pass)
 		ck("login", err)
+	}
+	if *printtoken {
+		fmt.Println(c.Token())
+		os.Exit(0)
 	}
 
 	var (
@@ -68,6 +74,9 @@ func main() {
 				log.Printf("file: found mapping %q->%q", m.User, m.Username)
 			}
 			ts = m.Ts
+			if *replay {
+				fmt.Println(m)
+			}
 		}
 		log.Printf("read through %d messages (last ts=%s)", i, ts)
 	}
@@ -105,11 +114,11 @@ func main() {
 		}
 
 		for i := len(m); i != 0; i-- {
-			u := &m[i-1]
-			u.Username = umap[u.User]
-			fmt.Println(u)
+			m := &m[i-1]
+			m.Username = umap[m.User]
+			fmt.Println(m)
 			if enc != nil {
-				enc.Encode(u)
+				enc.Encode(m)
 			}
 		}
 
