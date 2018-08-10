@@ -14,14 +14,14 @@ import (
 )
 
 var (
-	space      = flag.String("s", "", `slack workspace name i.e., the "foo" in foo.slack.com`)
+	space      = flag.String("s", os.Getenv("slackworkspace"), `slack workspace name i.e., the "foo" in foo.slack.com`)
+	token      = flag.String("x", os.Getenv("slacktoken"), "api xox. token (email and password not required if set)")
+	chid       = flag.String("c", "C029RQSEE", "channel id (must manually resolve for now)")
 	email      = flag.String("e", "", "email")
 	pass       = flag.String("p", "", "password")
-	chid       = flag.String("c", "C029RQSEE", "channel id (must manually resolve for now)")
 	raw        = flag.String("f", "", "raw file to save json results (contains more details)")
 	replay     = flag.Bool("r", false, "replay the old contents in the raw file as if the messages were obtained online")
 	sleep      = flag.Duration("sleep", time.Second, "duration to wait before downloading each next page")
-	token      = flag.String("x", "", "api xox. token (email and password not required if set)")
 	printtoken = flag.Bool("X", false, "log in, print out the xox. token, and exit")
 )
 
