@@ -84,6 +84,10 @@ func (c *Client) Do(method string, path string, body interface{}) (r *http.Respo
 		tx.Header.Set("Content-Type", "application/json")
 	}
 
+	if debug {
+		Dump(tx)
+		defer Dump(r)
+	}
 	if r, err = c.Client.Do(tx); err != nil {
 		return c.fail(err)
 	}
