@@ -1,6 +1,7 @@
 package slack
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -9,10 +10,17 @@ import (
 	"time"
 )
 
-func SendMsg(c *Client, to string, text string) (err error) {
-	r, err := c.Post(c.BaseURL()+"/api/chat.postMessage", &Message{
-		Channel: to,
-		Text:    text,
+type delMsg struct {
+	Channel string `json:"channel"`
+	TS      string `json:"ts"`
+	As      bool   `json:"as_user"`
+}
+
+func DelMsg(c *Client, ch string, ts string) (err error) {
+	r, err := c.Post(c.BaseURL()+"/api/chat.delete", &delMsg{
+		Channel: ch,
+		TS:      ts,
+		As:      true,
 	})
 	if err != nil {
 		return err
@@ -20,6 +28,19 @@ func SendMsg(c *Client, to string, text string) (err error) {
 	defer r.Body.Close()
 	io.Copy(os.Stdout, r.Body)
 	return err
+}
+
+func SendMsg(c *Client, to string, text string) (d *delMsg, err error) {
+	r, err := c.Post(c.BaseURL()+"/api/chat.postMessage", &Message{
+		Channel: to,
+		Text:    text,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+	d = &delMsg{}
+	return d, json.NewDecoder(r.Body).Decode(d)
 }
 
 type Attachment struct {

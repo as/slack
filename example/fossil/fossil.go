@@ -83,7 +83,7 @@ func main() {
 
 	for {
 		log.Printf("from %s\n", ts)
-		m, err := slack.History(c, *chid, &slack.HistoryOpt{
+		m, err := slack.History(c, *chid, &slack.Page{
 			Count: 1000,
 			Start: ts,
 		})
