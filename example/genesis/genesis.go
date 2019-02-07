@@ -37,7 +37,7 @@ func main() {
 
 	log.Printf("from %s\n", ts)
 	m, err := slack.History(c, *chid,
-		&slack.HistoryOpt{
+		&slack.Page{
 			Count: 100,
 			Start: ts,
 		})
