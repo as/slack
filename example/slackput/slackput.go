@@ -41,7 +41,7 @@ func main() {
 		m, err := slack.SendMsg(c, *ch, sc.Text())
 		ck("send", err)
 		if *del{
-			if err = slack.Delete(c, *ch, m.TS); err != nil{
+			if err = slack.DelMsg(c, *ch, m.TS); err != nil{
 				log.Println("slack: delete:", err)
 			}
 		}
